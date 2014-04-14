@@ -20,7 +20,7 @@ Quick start
         'socket_transfer',
     )
 
-2. Add the settings for websocket ip and port in your settings.py, like this:
+2. Add the settings for websocket ip and port in your settings.py, like this::
 
     WEB_SOCKET_SERVER = "46.21.104.50"
     WEB_SOCKET_PORT = 8081
