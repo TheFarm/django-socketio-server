@@ -2,11 +2,12 @@
 Django Socket Transfer
 =====
 
-This is a simple implementation of socketIO for django usage.
+This is a simple implementation of gevent-socketIO for django usage.
+https://github.com/abourget/gevent-socketio
 
 Features
 --------
-* Database connection closes after call (this is so that we do not hog connections to database)
+* Database connection closes after call
 * Imports namespaces from apps automatically
 
 Quick start
