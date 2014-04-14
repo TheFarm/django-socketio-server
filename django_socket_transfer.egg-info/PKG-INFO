@@ -1,0 +1,50 @@
+Metadata-Version: 1.1
+Name: django-socket-transfer
+Version: 0.1
+Summary: Django app for simple socketIO connection.
+Home-page: http://thefarm.se/
+Author: Magnus Knutas
+Author-email: developers@thefarm.se
+License: BSD License
+Description: =====
+        Django Socket Transfer
+        =====
+        
+        This is a simple implementation of socketIO for django usage.
+        
+        Features
+        --------
+        * Database connection closes after call (this is so that we do not hog connections to database)
+        * Imports namespaces from apps automatically
+        
+        Quick start
+        -----------
+        
+        1. Add "socket_transfer" to your INSTALLED_APPS setting like this::
+        
+            INSTALLED_APPS = (
+                ...
+                'socket_transfer',
+            )
+        
+        2. Add the settings for websocket ip and port in your settings.py, like this:
+        
+            WEB_SOCKET_SERVER = "46.21.104.50"
+            WEB_SOCKET_PORT = 8081
+            WEB_SOCKET_URL = "%s:%d" % (WEB_SOCKET_SERVER, WEB_SOCKET_PORT)
+        
+        3. Add a sockets.py (with a namespace) to the app that needs to be connected for realtime data.
+        
+        4. Create a client script that talks through the socket (I rekomend using angular-socket-io https://github.com/btford/angular-socket-io)
+        
+        5. Start socketserver for testing (not recomended in production environment): ./manage.py socket_runserver
+Platform: UNKNOWN
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
