@@ -22,7 +22,7 @@ Quick start
 
 2. Add the settings for websocket ip and port in your settings.py, like this::
 
-    WEB_SOCKET_SERVER = "46.21.104.50"
+    WEB_SOCKET_SERVER = "127.0.0.1"
     WEB_SOCKET_PORT = 8081
     WEB_SOCKET_URL = "%s:%d" % (WEB_SOCKET_SERVER, WEB_SOCKET_PORT)
 
