@@ -26,8 +26,32 @@ Quick start
     WEB_SOCKET_PORT = 8081
     WEB_SOCKET_URL = "%s:%d" % (WEB_SOCKET_SERVER, WEB_SOCKET_PORT)
 
-3. Add a sockets.py (with a namespace) to the app that needs to be connected for realtime data.
+3. Add a sockets.py (with a namespace) to the app that needs to be connected for realtime data::
 
-4. Create a client script that talks through the socket (I rekomend using angular-socket-io https://github.com/btford/angular-socket-io)
+   @namespace("/user")
+   class UserNamespace(BaseEsNamespace, RoomsMixin, BroadcastMixin):
+     def recv_connect(self):
+        user = get_user(self.environ)
+	# Code 
 
-5. Start socketserver for testing (not recomended in production environment): ./manage.py socket_runserver
+
+     def recv_disconnect(self, silent=False):
+        user = get_user(self.environ)
+	# Code
+
+     def on_join(self, data):
+        self.join(str(data['room']))
+
+     def on_leave(self, data):
+        self.leave(str(data['room']))
+
+     def on_update(self, data):
+        self.emit_to_room(
+            str(data['room']),
+            'update',
+            data['pk']
+        )
+
+4. Create a client script that talks through the socket (I recommend using angular-socket-io https://github.com/btford/angular-socket-io)
+
+5. Start socketserver for testing (not recommend in production environment): ./manage.py socket_runserver
