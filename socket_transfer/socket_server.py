@@ -4,7 +4,6 @@ import logging
 from django.contrib.auth import get_user_model
 
 from socketio import socketio_manage
-from esportal.core.models import PortalUser
 
 SOCKETIO_NS = {}
 

@@ -1,5 +1,5 @@
 import logging
-from django.db import connection, transaction
+from django.db import connection
 from socketio.namespace import BaseNamespace
 
 logger = logging.getLogger(__name__)

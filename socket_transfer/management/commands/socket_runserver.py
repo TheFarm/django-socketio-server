@@ -7,7 +7,7 @@ patch_all()
 from gevent import spawn
 
 from django.core.management.base import BaseCommand
-from esportal.socket_transfer.socket_server import app
+from socket_transfer.socket_server import app
 
 logger = logging.getLogger(__name__)
 
