@@ -1,9 +1,11 @@
 import logging
 from django.db import connection
 from socketio.namespace import BaseNamespace
+from socket_transfer.socket_server import get_user
 
 logger = logging.getLogger(__name__)
 
+connected_users = []
 
 class BaseEsNamespace(BaseNamespace):
     def process_packet(self, packet):
@@ -40,6 +42,7 @@ class BaseEsNamespace(BaseNamespace):
         elif packet_type == 'connect':
             logger.debug("Connect: %s", str(packet))
             ret = self.call_method_with_acl('recv_connect', packet)
+            connected_users.append(get_user(self.environ).pk)
         elif packet_type == 'error':
             logger.debug("Error: %s", str(packet))
             ret = self.call_method_with_acl('recv_error', packet)
@@ -59,6 +62,10 @@ class BaseEsNamespace(BaseNamespace):
             self.disconnect(silent=True)
             logger.debug("Disconnect: %s", str(packet))
             ret = self.call_method_with_acl('recv_disconnect', packet)
+            try:
+                connected_users.remove(get_user(self.environ).pk)
+            except ValueError:
+                pass
         try:
             connection.close()
         except:
