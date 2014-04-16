@@ -62,7 +62,7 @@ class BaseEsNamespace(BaseNamespace):
             logger.debug("Disconnect: %s", str(packet))
             ret = self.call_method_with_acl('recv_disconnect', packet)
             try:
-                OnlineUsers.objects.delete(get_user(self.environ).pk)
+                OnlineUsers.objects.delete(user=get_user(self.environ))
             except ValueError:
                 pass
         try:
