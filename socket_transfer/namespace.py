@@ -41,7 +41,10 @@ class BaseEsNamespace(BaseNamespace):
         elif packet_type == 'connect':
             logger.debug("Connect: %s", str(packet))
             ret = self.call_method_with_acl('recv_connect', packet)
-            OnlineUsers.objects.get_or_create(user_id=get_user(self.environ).pk)
+            try:
+                OnlineUsers.objects.get_or_create(user_id=get_user(self.environ).pk)
+            except:
+                pass
         elif packet_type == 'error':
             logger.debug("Error: %s", str(packet))
             ret = self.call_method_with_acl('recv_error', packet)
@@ -61,7 +64,10 @@ class BaseEsNamespace(BaseNamespace):
             self.disconnect(silent=True)
             logger.debug("Disconnect: %s", str(packet))
             ret = self.call_method_with_acl('recv_disconnect', packet)
-            OnlineUsers.objects.get_or_create(user=get_user(self.environ))[0].delete()
+            try:
+                OnlineUsers.objects.get_or_create(user=get_user(self.environ))[0].delete()
+            except:
+                pass
         try:
             connection.close()
         except:
