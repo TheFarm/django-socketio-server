@@ -61,7 +61,7 @@ class BaseEsNamespace(BaseNamespace):
             self.disconnect(silent=True)
             logger.debug("Disconnect: %s", str(packet))
             ret = self.call_method_with_acl('recv_disconnect', packet)
-            OnlineUsers.objects.delete(user=get_user(self.environ))
+            OnlineUsers.objects.get_or_create(user=get_user(self.environ)).delete()
         try:
             connection.close()
         except:
