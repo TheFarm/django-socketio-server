@@ -3,3 +3,4 @@ include requirements.txt
 include README.rst
 recursive-include docs *
 recursive-include socket_transfer/management *
+recursive-include socket_transfer/migrations *
