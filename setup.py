@@ -17,6 +17,12 @@ setup(
     url='http://thefarm.se/',
     author='Magnus Knutas',
     author_email='developers@thefarm.se',
+    install_requires=[
+        "Django",
+        "gevent",
+        'gevent-socketio',
+        'gevent-websocket',
+    ],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
