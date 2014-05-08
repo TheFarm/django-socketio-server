@@ -1,6 +1,6 @@
-Django==1.6.2
+Django
 
 ## Socket
-gevent==1.0
-gevent-socketio==0.3.6
-gevent-websocket==0.9.3
+gevent
+gevent-socketio
+gevent-websocket
