@@ -28,7 +28,7 @@ class BaseEsNamespace(BaseNamespace):
         #connection.open()
         packet_type = packet['type']
         if packet_type == 'event':
-            logger.debug("Event: %s", str(packet))
+            logger.info("Event: %s", str(packet))
             ret = self.process_event(packet)
         elif packet_type == 'message':
             logger.debug("Message: %s", packet['data'])
