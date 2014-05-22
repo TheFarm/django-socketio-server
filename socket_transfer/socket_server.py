@@ -66,7 +66,6 @@ def get_user(environ):
         session_key = cookie[cookie_name].value
         session = Session.objects.get(session_key=session_key)
         user_id = session.get_decoded().get(SESSION_KEY)
-        logger.debug("FETCHING USER %s", user_id)
         user = get_user_model().objects.get(pk=user_id)
         return user
     except (ImportError, KeyError, ObjectDoesNotExist):
