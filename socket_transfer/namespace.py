@@ -14,7 +14,6 @@ class BaseEsNamespace(BaseNamespace):
             ret = super(BaseEsNamespace, self).process_packet(packet)
         try:
             connection.close()
-            logger.info('closed connection')
         except:
             logger.error("CANT CLOSE DATABASE")
         return ret
