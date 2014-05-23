@@ -82,6 +82,7 @@ class BaseEsNamespace(BaseNamespace):
                         print "removed user by last session %s" % user
                         users.remove(user)
 
+
         self.set_users(users)
 
     def get_user_by_session(self, sessid):
@@ -146,6 +147,10 @@ class BaseEsNamespace(BaseNamespace):
             session = Session.objects.get(session_key=session_key)
             user_id = session.get_decoded().get(SESSION_KEY)
             user = get_user_model().objects.get(pk=user_id)
+            try:
+                connection.close()
+            except:
+                logger.error("CANT CLOSE DB")
             return user
         except (ImportError, KeyError, ObjectDoesNotExist):
             return False
