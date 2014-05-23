@@ -37,7 +37,7 @@ class BaseEsNamespace(BaseNamespace):
             for session_user in users:
                 if session_user.pk == user.pk:
                     print "session user detected %s" % session_user
-                    self.add_session_to_user(user, self.socket.sessid)
+                    self.update_session_for_user(user, self.socket.sessid)
 
             if not self.get_user_by_session(self.socket.sessid):
                 user.sessions = [self.socket.sessid]
@@ -92,15 +92,13 @@ class BaseEsNamespace(BaseNamespace):
 
         return False
 
-    def add_session_to_user(self, user_add, session):
+    def update_session_for_user(self, user_add, session):
         users = self.get_users()
 
         for user in users:
             if user.pk == user_add.pk:
                 print user.sessions
-                if session not in user.sessions:
-                    print "addedd session %s to user %s" % (session, user)
-                    user.sessions.append(session)
+                user.sessions = [session]
 
         self.set_users(users)
 
