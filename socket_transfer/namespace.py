@@ -1,156 +1,77 @@
 import logging
-from django.contrib.auth import get_user_model
-from django.db import transaction, connection
+from django.db import connection, transaction
 from socketio.namespace import BaseNamespace
-from django.core.cache import cache
+from socket_transfer.models import OnlineUsers
+from socket_transfer.socket_server import get_user
 
 logger = logging.getLogger(__name__)
 
-
 class BaseEsNamespace(BaseNamespace):
     def process_packet(self, packet):
+        """If you override this, NONE of the functions in this class
+        will be called.  It is responsible for dispatching to
+        :meth:`process_event` (which in turn calls ``on_*()`` and
+        ``recv_*()`` methods).
+
+        If the packet arrived here, it is because it belongs to this endpoint.
+
+        For each packet arriving, the only possible path of execution, that is,
+        the only methods that *can* be called are the following:
+
+        * recv_connect()
+        * recv_message()
+        * recv_json()
+        * recv_error()
+        * recv_disconnect()
+        * on_*()
+        """
+        #connection.open()
         with transaction.atomic():
-            self.connect_user(self.get_current_user())
-            ret = super(BaseEsNamespace, self).process_packet(packet)
+            packet_type = packet['type']
+            if packet_type == 'event':
+                logger.info("Event: %s", str(packet))
+                ret = self.process_event(packet)
+            elif packet_type == 'message':
+                logger.debug("Message: %s", packet['data'])
+                ret = self.call_method_with_acl('recv_message', packet,
+                                                 packet['data'])
+            elif packet_type == 'json':
+                logger.debug("json: %s", packet['data'])
+                ret = self.call_method_with_acl('recv_json', packet,
+                                                 packet['data'])
+            elif packet_type == 'connect':
+                logger.debug("Connect: %s", str(packet))
+                ret = self.call_method_with_acl('recv_connect', packet)
+                try:
+                    OnlineUsers.objects.get_or_create(user_id=get_user(self.environ).pk)
+                except:
+                    pass
+            elif packet_type == 'error':
+                logger.debug("Error: %s", str(packet))
+                ret = self.call_method_with_acl('recv_error', packet)
+            elif packet_type == 'ack':
+                logger.debug("Ack: %s", str(packet['ackId']))
+                callback = self.socket._pop_ack_callback(packet['ackId'])
+                if not callback:
+                    logger.error("No such callback for ackId %s", packet['ackId'])
+
+                try:
+                    ret = callback(*(packet['args']))
+                except TypeError, e:
+                    logger.error("Call to callback function failed %s", str(e.message))
+            elif packet_type != 'disconnect':
+                logger.warning("Unprocessed packet %s", str(packet))
+            elif packet_type == 'disconnect':
+                self.disconnect(silent=True)
+                logger.debug("Disconnect: %s", str(packet))
+                ret = self.call_method_with_acl('recv_disconnect', packet)
+                try:
+                    OnlineUsers.objects.get_or_create(user=get_user(self.environ))[0].delete()
+                except:
+                    logger.error("Cant delete user online")
+                    
         try:
             connection.close()
         except:
-            logger.error("CANT CLOSE DB")
+                logger.error("CANT CLOSE DATABASE")
         return ret
-
-
-    def on_manual_disconnect(self, data):
-        self.remove_user_by_session(self.socket.sessid)
-        self.recv_disconnect()
-
-    def send_to_namespace(self, event, args):
-        args['event'] = event
-        packet = self.build_packet(args)
-
-        for sessid, socket in self.iterate_sockets():
-            socket.send_packet(packet)
-
-    def connect_user(self, user):
-        users = self.get_users()
-
-        if user:
-            for session_user in users:
-                if session_user.pk == user.pk:
-                    logger.info( "session user detected %s" % session_user)
-                    self.add_session_to_user(user, self.socket.sessid)
-
-            if not self.get_user_by_session(self.socket.sessid):
-                user.sessions = [self.socket.sessid]
-                users.append(user)
-                self.set_users(users)
-
-    def set_users(self, users):
-        cache.set(self.get_cache_name('users'), users)
-
-    def get_users(self):
-        users = cache.get(self.get_cache_name('users'), [])
-        filtered_users = self.filter_offline_users(users)
-        self.set_users(filtered_users)
-
-        return filtered_users
-
-    def filter_offline_users(self, users):
-        sessions = self.get_sessions()
-
-        for user in users:
-            for session in user.sessions:
-                if session not in sessions:
-                    logger.info( "removed session %s from user %s" % (session, user))
-                    user.sessions.remove(session)
-
-                    if len(user.sessions) < 1:
-                        logger.info( "removed user by last session %s" % user)
-                        users.remove(user)
-
-        return users
-
-    def remove_user_by_session(self, sessid, force=False):
-        users = self.get_users()
-
-        for user in users:
-            for session in user.sessions:
-                if session == sessid:
-                    logger.info( "removed session %s from user %s" % (session, user))
-                    user.sessions.remove(session)
-
-                    if len(user.sessions) < 1 or force:
-                        logger.info( "removed user by last session %s" % user)
-                        users.remove(user)
-
-
-        self.set_users(users)
-
-    def get_user_by_session(self, sessid):
-        for user in self.get_users():
-            for session in user.sessions:
-                if session == sessid:
-                    return user
-
-        return False
-
-    def add_session_to_user(self, user_add, session):
-        users = self.get_users()
-
-        for user in users:
-            if user.pk == user_add.pk:
-                logger.info( user.sessions)
-                if session not in user.sessions:
-                    logger.info( "addedd session %s to user %s" % (session, user))
-                    user.sessions.append(session)
-
-        self.set_users(users)
-
-    def get_cache_name(self, name):
-        return self.ns_name + '_' + name
-
-    def get_sessions(self):
-        sessions = []
-
-        for sessid, socket in self.iterate_sockets():
-            sessions.append(sessid)
-
-        return sessions
-
-    def iterate_sockets(self):
-        return self.socket.server.sockets.iteritems()
-
-    def recv_disconnect(self):
-        self.disconnect(silent=True)
-
-    def build_packet(self, args):
-        pkt = dict(
-            type='event',
-            name='receive',
-            args=args,
-            endpoint=self.ns_name
-        )
-
-        return pkt
-
-    def get_current_user(self):
-        try:
-            from django.conf import settings as django_settings
-            from Cookie import SimpleCookie
-            from django.contrib.auth import SESSION_KEY
-            from django.contrib.auth.models import User
-            from django.contrib.sessions.models import Session
-            from django.core.exceptions import ObjectDoesNotExist
-
-            cookie = SimpleCookie(self.environ.get("HTTP_COOKIE", ""))
-            cookie_name = django_settings.SESSION_COOKIE_NAME
-            session_key = cookie[cookie_name].value
-            session = Session.objects.get(session_key=session_key)
-            user_id = session.get_decoded().get(SESSION_KEY)
-            user = get_user_model().objects.get(pk=user_id)
-            try:
-                connection.close()
-            except:
-                logger.error("CANT CLOSE DB")
-            return user
-        except (ImportError, KeyError, ObjectDoesNotExist):
-            return False
