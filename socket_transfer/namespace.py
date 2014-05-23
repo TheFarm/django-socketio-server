@@ -62,16 +62,22 @@ class BaseEsNamespace(BaseNamespace):
             elif packet_type != 'disconnect':
                 logger.warning("Unprocessed packet %s", str(packet))
             elif packet_type == 'disconnect':
-                self.disconnect(silent=True)
                 logger.debug("Disconnect: %s", str(packet))
                 ret = self.call_method_with_acl('recv_disconnect', packet)
                 try:
                     OnlineUsers.objects.get_or_create(user=get_user(self.environ))[0].delete()
                 except:
                     logger.error("Cant delete user online")
-                    
+
         try:
             connection.close()
         except:
                 logger.error("CANT CLOSE DATABASE")
         return ret
+
+    def recv_disconnect(self):
+        try:
+            connection.close()
+        except:
+                logger.error("CANT CLOSE DATABASE")
+        self.disconnect(silent=True)
