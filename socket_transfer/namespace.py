@@ -68,5 +68,11 @@ class BaseEsNamespace(BaseNamespace):
                 try:
                     OnlineUsers.objects.get_or_create(user=get_user(self.environ))[0].delete()
                 except:
-                    pass
+                    logger.error("Cant delete user online")
+
+        if packet_type == 'disconnect':
+            try:
+                connection.close()
+            except:
+                logger.error("CANT CLOSE DATABASE")
         return ret
