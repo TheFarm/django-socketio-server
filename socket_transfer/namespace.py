@@ -1,6 +1,6 @@
 import logging
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import transaction, connection
 from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 
@@ -12,6 +12,11 @@ class BaseEsNamespace(BaseNamespace):
         with transaction.atomic():
             self.connect_user(self.get_current_user())
             ret = super(BaseEsNamespace, self).process_packet(packet)
+        try:
+            connection.close()
+        except:
+            logger.error("CANT CLOSE DB")
+        return ret
 
 
     def on_manual_disconnect(self, data):
