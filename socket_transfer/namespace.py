@@ -36,7 +36,7 @@ class BaseEsNamespace(BaseNamespace):
         if user:
             for session_user in users:
                 if session_user.pk == user.pk:
-                    print "session user detected %s" % session_user
+                    logger.info( "session user detected %s" % session_user)
                     self.add_session_to_user(user, self.socket.sessid)
 
             if not self.get_user_by_session(self.socket.sessid):
@@ -60,11 +60,11 @@ class BaseEsNamespace(BaseNamespace):
         for user in users:
             for session in user.sessions:
                 if session not in sessions:
-                    print "removed session %s from user %s" % (session, user)
+                    logger.info( "removed session %s from user %s" % (session, user))
                     user.sessions.remove(session)
 
                     if len(user.sessions) < 1:
-                        print "removed user by last session %s" % user
+                        logger.info( "removed user by last session %s" % user)
                         users.remove(user)
 
         return users
@@ -75,11 +75,11 @@ class BaseEsNamespace(BaseNamespace):
         for user in users:
             for session in user.sessions:
                 if session == sessid:
-                    print "removed session %s from user %s" % (session, user)
+                    logger.info( "removed session %s from user %s" % (session, user))
                     user.sessions.remove(session)
 
                     if len(user.sessions) < 1 or force:
-                        print "removed user by last session %s" % user
+                        logger.info( "removed user by last session %s" % user)
                         users.remove(user)
 
 
@@ -98,9 +98,9 @@ class BaseEsNamespace(BaseNamespace):
 
         for user in users:
             if user.pk == user_add.pk:
-                print user.sessions
+                logger.info( user.sessions)
                 if session not in user.sessions:
-                    print "addedd session %s to user %s" % (session, user)
+                    logger.info( "addedd session %s to user %s" % (session, user))
                     user.sessions.append(session)
 
         self.set_users(users)
