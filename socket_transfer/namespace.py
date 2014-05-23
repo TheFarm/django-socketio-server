@@ -1,5 +1,6 @@
 import logging
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 
@@ -8,8 +9,10 @@ logger = logging.getLogger(__name__)
 
 class BaseEsNamespace(BaseNamespace):
     def process_packet(self, packet):
-        self.connect_user(self.get_current_user())
-        super(BaseEsNamespace, self).process_packet(packet)
+        with transaction.atomic():
+            self.connect_user(self.get_current_user())
+            ret = super(BaseEsNamespace, self).process_packet(packet)
+
 
     def on_manual_disconnect(self, data):
         self.remove_user_by_session(self.socket.sessid)
