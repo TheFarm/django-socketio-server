@@ -103,7 +103,11 @@ class BaseEsNamespace(BaseNamespace):
             if user.pk == user_add.pk:
                 print user.sessions
                 user.sessions = [session]
-                OnlineUsers.objects.get_or_create(user=user_add)
+                o_user = OnlineUsers.objects.filter(user=user_add)
+                if o_user > 1:
+                    for user in o_user:
+                        user.delete()
+                    OnlineUsers.objects.get_or_create(user=user_add)
 
         self.set_users(users)
 
