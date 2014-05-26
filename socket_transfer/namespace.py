@@ -107,7 +107,7 @@ class BaseEsNamespace(BaseNamespace):
                 if o_user > 1:
                     for user in o_user:
                         user.delete()
-                    OnlineUsers.objects.get_or_create(user=user_add)
+                OnlineUsers.objects.get_or_create(user=user_add)
 
         self.set_users(users)
 
