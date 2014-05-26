@@ -1,8 +1,10 @@
 import logging
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 from django.db import connection, transaction
+from socket_transfer.models import OnlineUsers
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +82,10 @@ class BaseEsNamespace(BaseNamespace):
                     if len(user.sessions) < 1 or force:
                         print "removed user by last session %s" % user
                         users.remove(user)
+                        try:
+                            OnlineUsers.objects.get(user=user).delete()
+                        except ObjectDoesNotExist:
+                            logger.error("User removed but was not online")
 
         self.set_users(users)
 
@@ -98,6 +104,7 @@ class BaseEsNamespace(BaseNamespace):
             if user.pk == user_add.pk:
                 print user.sessions
                 user.sessions = [session]
+                OnlineUsers.objects.get_or_create(user=user_add)
 
         self.set_users(users)
 
