@@ -82,10 +82,9 @@ class BaseEsNamespace(BaseNamespace):
                     if len(user.sessions) < 1 or force:
                         print "removed user by last session %s" % user
                         users.remove(user)
-                        try:
-                            OnlineUsers.objects.get(user=user).delete()
-                        except ObjectDoesNotExist:
-                            logger.error("User removed but was not online")
+                        o_user = OnlineUsers.objects.filter(user=user)
+                        for user in o_user:
+                            user.delete()
 
         self.set_users(users)
 
