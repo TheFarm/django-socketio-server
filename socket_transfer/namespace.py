@@ -14,7 +14,7 @@ class BaseEsNamespace(BaseNamespace):
         with transaction.atomic():
             logger.info('Received packet %s', packet)
             self.connect_user(self.get_current_user())
-            ret = super(EsportalNamespace, self).process_packet(packet)
+            ret = super(BaseEsNamespace, self).process_packet(packet)
         try:
             connection.close()
         except:
