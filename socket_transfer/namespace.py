@@ -175,8 +175,6 @@ class BaseEsNamespace(BaseNamespace):
 
         if user:
             logger.info('User %s disconnected', user)
-        else:
-            logger.warning('Non user disconnected with sessions %s', user.sessions)
 
     def build_packet(self, args):
         pkt = dict(
