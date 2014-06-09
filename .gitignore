@@ -11,7 +11,7 @@
 *.swp\
 .installed.cfg\
 .settings\
-__minitage__*\
+__minitage__
 bin/*\
 develop-eggs\
 downloads\
@@ -19,7 +19,7 @@ eggs\
 *.log\
 parts\
 tmp\
-documentation/_build/*\
+documentation/_build/
 .env
 .project\
 .pydevproject\
