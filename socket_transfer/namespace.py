@@ -1,10 +1,8 @@
 import logging
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
 from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 from django.db import connection, transaction
-from socket_transfer.models import OnlineUsers
 
 logger = logging.getLogger(__name__)
 
@@ -132,8 +130,10 @@ class BaseEsNamespace(BaseNamespace):
 
         for user in users:
             if user.pk == user_add.pk:
-                if user.sessions and session not in user.sessions:
-                    user.sessions = [session]
+                if not user.sessions:
+                    user.sessions = []
+                if session not in user.sessions:
+                    user.sessions.append(session)
                     logger.info('Updated user %s to session %s', user, session)
 
         self.set_users(users)
