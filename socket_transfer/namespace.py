@@ -25,8 +25,7 @@ class BaseEsNamespace(BaseNamespace):
         self.recv_disconnect()
 
     def send_to_users(self, users, event, args={}):
-        args['event'] = event
-        packet = self.build_packet(args)
+        packet = self.build_packet(event, args)
 
         logger.info('Sending packet %s to users %s', packet, users)
 
@@ -39,8 +38,7 @@ class BaseEsNamespace(BaseNamespace):
             self.send_packet(session, packet)
 
     def send_to_namespace(self, event, args={}):
-        args['event'] = event
-        packet = self.build_packet(args)
+        packet = self.build_packet(event, args)
 
         logger.info('Sending packet %s to namespace %s', packet, self.ns_name)
 
@@ -176,12 +174,15 @@ class BaseEsNamespace(BaseNamespace):
         if user:
             logger.info('User %s disconnected', user)
 
-    def build_packet(self, args):
+    def build_packet(self, event, args, namespace=None):
+        if not namespace:
+            namespace = self.ns_name
+
         pkt = dict(
             type='event',
-            name='receive',
+            name=event,
             args=args,
-            endpoint=self.ns_name
+            endpoint=namespace
         )
 
         return pkt
