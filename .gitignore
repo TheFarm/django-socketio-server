@@ -20,10 +20,10 @@ eggs\
 parts\
 tmp\
 documentation/_build/*\
-.env/*\
+.env
 .project\
 .pydevproject\
-.idea/*\
+.idea
 dist
 *.egg-info
 }
