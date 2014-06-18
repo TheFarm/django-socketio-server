@@ -4,6 +4,7 @@ from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 from django.db import connection, transaction
 
+CACHE_LIFETIME = 86400
 logger = logging.getLogger(__name__)
 
 
@@ -65,7 +66,7 @@ class BaseEsNamespace(BaseNamespace):
                 logger.info('Connected user %s to namespace %s with session %s', user, self.ns_name, self.socket.sessid)
 
     def set_users(self, users):
-        cache.set(self.get_cache_name('users'), users)
+        cache.set(self.get_cache_name('users'), users, CACHE_LIFETIME)
 
     def get_users(self):
         users = cache.get(self.get_cache_name('users'), [])
