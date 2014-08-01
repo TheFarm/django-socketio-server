@@ -1,10 +1,10 @@
 import logging
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
 from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 from django.db import connection, transaction
-from socket_transfer.models import OnlineUsers
+from django.core.exceptions import ObjectDoesNotExist
+from models import OnlineUsers
 
 CACHE_LIFETIME = 86400
 logger = logging.getLogger(__name__)
@@ -65,6 +65,8 @@ class BaseEsNamespace(BaseNamespace):
                 user.sessions = [self.socket.sessid]
                 users.append(user)
                 self.set_users(users)
+                self.update_user_status(user, 'online')
+
                 logger.info('Connected user %s to namespace %s with session %s', user, self.ns_name, self.socket.sessid)
 
     def set_users(self, users):
@@ -88,6 +90,7 @@ class BaseEsNamespace(BaseNamespace):
 
                     if len(user.sessions) < 1:
                         users.remove(user)
+                        self.update_user_status(user, 'offline')
                         logger.info('All session for user %s are offline', user)
 
         return users
@@ -103,6 +106,7 @@ class BaseEsNamespace(BaseNamespace):
 
                     if len(user.sessions) < 1:
                         users.remove(user)
+                        self.update_user_status(user, 'offline')
                         logger.info('Removed user %s by last session', user)
 
         self.set_users(users)
@@ -131,8 +135,10 @@ class BaseEsNamespace(BaseNamespace):
 
         for user in users:
             if user.pk == user_add.pk:
-                if user.sessions and session not in user.sessions:
-                    user.sessions = [session]
+                if not user.sessions:
+                    user.sessions = []
+                if session not in user.sessions:
+                    user.sessions.append(session)
                     logger.info('Updated user %s to session %s', user, session)
 
         self.set_users(users)
@@ -147,6 +153,19 @@ class BaseEsNamespace(BaseNamespace):
                     logger.info('Added session %s to user %s', session, user)
 
         self.set_users(users)
+
+    def update_user_status(self, user, status):
+        if user:
+            django_user = get_user_model().objects.get(pk=user.pk)
+
+            if status == 'online':
+                OnlineUsers.objects.get_or_create(user=django_user)
+            elif status == 'offline':
+                try:
+                    obj = OnlineUsers.objects.get(user=django_user)
+                    obj.delete()
+                except ObjectDoesNotExist:
+                    pass
 
     def get_cache_name(self, name):
         return self.ns_name + '_' + name
