@@ -3,11 +3,8 @@ from django.contrib.auth import get_user_model
 from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 from django.db import connection, transaction
-<<<<<<< HEAD
-=======
 from django.core.exceptions import ObjectDoesNotExist
 from models import OnlineUsers
->>>>>>> ca5b30bad0523777d54d2ef60936bff0e48a164a
 
 CACHE_LIFETIME = 86400
 logger = logging.getLogger(__name__)
