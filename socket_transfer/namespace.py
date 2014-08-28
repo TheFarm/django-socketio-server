@@ -2,9 +2,10 @@ import logging
 from django.contrib.auth import get_user_model
 from socketio.namespace import BaseNamespace
 from django.core.cache import cache
-from django.db import connection, transaction
+from django.db import connection
 from django.core.exceptions import ObjectDoesNotExist
 from models import OnlineUsers
+from django.conf import settings
 
 CACHE_LIFETIME = 86400
 logger = logging.getLogger(__name__)
@@ -12,15 +13,13 @@ logger = logging.getLogger(__name__)
 
 class BaseEsNamespace(BaseNamespace):
     def process_packet(self, packet):
-        with transaction.atomic():
-            logger.info('Received packet %s', packet)
-            self.connect_user(self.get_current_user())
-            ret = super(BaseEsNamespace, self).process_packet(packet)
+        logger.info('Received packet %s', packet)
+        self.connect_user(self.get_current_user())
+        super(BaseEsNamespace, self).process_packet(packet)
         try:
             connection.close()
         except:
             logger.error("Error closing connection after processing packet")
-        return ret
 
     def on_manual_disconnect(self, data):
         logger.info('Manual disconnect from user %s in session %s', self.get_current_user(), self.socket.sessid)
@@ -156,16 +155,14 @@ class BaseEsNamespace(BaseNamespace):
 
     def update_user_status(self, user, status):
         if user:
-            django_user = get_user_model().objects.get(pk=user.pk)
-
-            if status == 'online':
-                OnlineUsers.objects.get_or_create(user=django_user)
+            users = cache.get(settings.ONLINE_USERS_CACHE_KEY)
+            if not users:
+                users = []
+            if status == 'online' and user.pk not in users:
+                users.append(user.pk)
             elif status == 'offline':
-                try:
-                    obj = OnlineUsers.objects.get(user=django_user)
-                    obj.delete()
-                except ObjectDoesNotExist:
-                    pass
+                users.remove(user.pk)
+            cache.set(settings.ONLINE_USERS_CACHE_KEY, users)
 
     def get_cache_name(self, name):
         return self.ns_name + '_' + name
@@ -184,11 +181,6 @@ class BaseEsNamespace(BaseNamespace):
     def recv_disconnect(self):
         user = self.get_current_user()
 
-        try:
-            connection.close()
-        except:
-            logger.error("Error closing connection after disconnect")
-
         self.disconnect(silent=True)
 
         if user:
@@ -206,6 +198,10 @@ class BaseEsNamespace(BaseNamespace):
         )
 
         return pkt
+
+    @staticmethod
+    def is_online(user):
+        return True if cache.get(settings.ONLINE_USERS_CACHE_KEY) and user.pk in cache.get(settings.ONLINE_USERS_CACHE_KEY) else False
 
     def get_current_user(self):
         try:
