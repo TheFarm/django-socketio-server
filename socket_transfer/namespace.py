@@ -161,7 +161,11 @@ class BaseEsNamespace(BaseNamespace):
             if status == 'online' and user.pk not in users:
                 users.append(user.pk)
             elif status == 'offline':
-                users.remove(user.pk)
+                try:
+                    users.remove(user.pk)
+                except ValueError:
+                    logger.debug("%s is not online!!!", user.username)
+
             cache.set(settings.ONLINE_USERS_CACHE_KEY, users)
 
     def get_cache_name(self, name):
