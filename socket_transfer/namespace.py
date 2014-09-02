@@ -3,9 +3,8 @@ from django.contrib.auth import get_user_model
 from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 from django.db import connection
-from django.core.exceptions import ObjectDoesNotExist
-from models import OnlineUsers
 from django.conf import settings
+from esportal.core.socket_client import client
 
 CACHE_LIFETIME = 86400
 logger = logging.getLogger(__name__)
@@ -14,8 +13,10 @@ logger = logging.getLogger(__name__)
 class BaseEsNamespace(BaseNamespace):
     def process_packet(self, packet):
         logger.info('Received packet %s', packet)
+
         self.connect_user(self.get_current_user())
         super(BaseEsNamespace, self).process_packet(packet)
+        client.pocess_queue()
         try:
             connection.close()
         except:
