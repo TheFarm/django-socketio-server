@@ -4,7 +4,7 @@ from socketio.namespace import BaseNamespace
 from django.core.cache import cache
 from django.db import connection
 from django.conf import settings
-from esportal.core.socket_client import client
+#from esportal.core.socket_client import client
 
 CACHE_LIFETIME = 86400
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ class BaseEsNamespace(BaseNamespace):
 
         self.connect_user(self.get_current_user())
         super(BaseEsNamespace, self).process_packet(packet)
-        client.pocess_queue()
+        #client.pocess_queue()
         try:
             connection.close()
         except:
