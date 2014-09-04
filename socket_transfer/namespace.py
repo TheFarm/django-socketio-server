@@ -15,7 +15,10 @@ class BaseEsNamespace(BaseNamespace):
         logger.info('Received packet %s', packet)
 
         self.connect_user(self.get_current_user())
-        super(BaseEsNamespace, self).process_packet(packet)
+        try:
+            super(BaseEsNamespace, self).process_packet(packet)
+        except Exception, e:
+            logger.error(e)
         client.pocess_queue(client)
         try:
             connection.close()
