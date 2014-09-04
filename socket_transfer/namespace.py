@@ -18,7 +18,7 @@ class BaseEsNamespace(BaseNamespace):
         try:
             super(BaseEsNamespace, self).process_packet(packet)
         except Exception, e:
-            logger.error(e)
+            logger.exception(e)
         client.pocess_queue(client)
         try:
             connection.close()
