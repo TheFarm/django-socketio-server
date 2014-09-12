@@ -9,6 +9,8 @@ from esportal.core.socket_client import client
 CACHE_LIFETIME = 86400
 logger = logging.getLogger(__name__)
 
+cache_key = settings.SOCKET_SERVER_SETTINGS.get('ONLINE_USERS_CACHE_KEY', 'online_users')
+
 
 class BaseEsNamespace(BaseNamespace):
     def process_packet(self, packet):
@@ -159,7 +161,7 @@ class BaseEsNamespace(BaseNamespace):
 
     def update_user_status(self, user, status):
         if user:
-            users = cache.get(settings.ONLINE_USERS_CACHE_KEY)
+            users = cache.get(cache_key)
             if not users:
                 users = []
             if status == 'online' and user.pk not in users:
@@ -170,7 +172,7 @@ class BaseEsNamespace(BaseNamespace):
                 except ValueError:
                     logger.debug("%s is not online!!!", user.username)
 
-            cache.set(settings.ONLINE_USERS_CACHE_KEY, users)
+            cache.set(cache_key, users)
 
     def get_cache_name(self, name):
         return self.ns_name + '_' + name
@@ -209,7 +211,7 @@ class BaseEsNamespace(BaseNamespace):
 
     @staticmethod
     def is_online(user):
-        return True if cache.get(settings.ONLINE_USERS_CACHE_KEY) and user.pk in cache.get(settings.ONLINE_USERS_CACHE_KEY) else False
+        return True if cache.get(cache_key) and user.pk in cache.get(cache_key) else False
 
     def get_current_user(self):
         try:
