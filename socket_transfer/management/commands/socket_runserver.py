@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        server = SocketIOServer((settings.WEB_SOCKET_SERVER, settings.WEB_SOCKET_PORT), app)
-        logger.info("Socket.io listeing on %s:%s", settings.WEB_SOCKET_SERVER, settings.WEB_SOCKET_PORT)
+        server = settings.SOCKET_SERVER_SETTINGS.get('SERVER', '127.0.0.1')
+        port = settings.SOCKET_SERVER_SETTINGS.get('PORT', 1280)
+        server = SocketIOServer(server, port, app)
+        logger.info("Socket.io listeing on %s:%s", server, port)
         spawn(server.serve_forever).join()
